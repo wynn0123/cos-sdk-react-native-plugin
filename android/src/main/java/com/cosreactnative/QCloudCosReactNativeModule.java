@@ -58,21 +58,28 @@ import com.tencent.cos.xml.model.tag.ListAllMyBuckets;
 import com.tencent.cos.xml.model.tag.ListBucket;
 import com.tencent.cos.xml.model.tag.LocationConstraint;
 import com.tencent.cos.xml.model.tag.VersioningConfiguration;
+import com.tencent.cos.xml.model.tag.eventstreaming.JSONOutput;
+import com.tencent.cos.xml.model.tag.pic.PicOperationRule;
+import com.tencent.cos.xml.model.tag.pic.PicOperations;
 import com.tencent.cos.xml.transfer.COSXMLDownloadTask;
 import com.tencent.cos.xml.transfer.COSXMLTask;
 import com.tencent.cos.xml.transfer.COSXMLUploadTask;
 import com.tencent.cos.xml.transfer.InitMultipleUploadListener;
 import com.tencent.cos.xml.transfer.TransferConfig;
 import com.tencent.cos.xml.transfer.TransferManager;
+import com.tencent.cos.xml.utils.StringUtils;
 import com.tencent.qcloud.core.auth.QCloudCredentialProvider;
 import com.tencent.qcloud.core.auth.SessionQCloudCredentials;
 import com.tencent.qcloud.core.auth.ShortTimeCredentialProvider;
 import com.tencent.qcloud.core.task.TaskExecutors;
 
+import org.json.JSONObject;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -967,10 +974,20 @@ public class QCloudCosReactNativeModule extends ReactContextBaseJavaModule {
     @Nullable String stroageClass,
     @Nullable String trafficLimit,
     @Nullable String region,
+    @Nullable String picOperations,
     final Promise promise
   ) {
     TransferManager transferManager = getTransferManager(transferKey);
     PutObjectRequest request = new PutObjectRequest(bucket, cosPath, Uri.parse(fileUri));
+
+    //250220 集成picOperations
+    if(!StringUtils.isEmpty(picOperations)){
+        try {
+            request.setRequestHeaders("Pic-Operations", picOperations,false);
+        } catch (CosXmlClientException ignored) {
+        }
+    }
+
     if (region != null) {
       request.setRegion(region);
     }

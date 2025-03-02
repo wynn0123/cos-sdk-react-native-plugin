@@ -73,7 +73,8 @@ export class CosTransferManger {
       initMultipleUploadCallbackKey,
       parameters.stroageClass,
       parameters.trafficLimit != undefined ?parameters.trafficLimit.toString():parameters.trafficLimit,
-      parameters.region
+      parameters.region,
+      parameters.picOperations
     )
 
     return new TransferTask(this.transferKey, taskId, this.cosTransferModule)

@@ -1,4 +1,35 @@
+## 注意：此包为Fork仓库，意在自己扩展一些功能
+
+1. 原官方仓库地址：https://github.com/TencentCloud/cos-sdk-react-native-plugin
+2. 在原sdk基础上增加一个picOperations参数，用来支持腾讯云图片处理参数
+
+#### picOperations 使用方法：
+
+```ts
+//开始上传
+const picOperations = {rules:[{fileid:"/imgs/aaa.jpg", rule:"style/aaaa"}]}; //图片处理等
+    let transferTask:TransferTask = await cosTransferManger.upload(
+      bucket,
+      cosPath,
+      srcPath,
+      {
+        uploadId: _uploadId,
+        resultListener: {
+          successCallBack: successCallBack,
+          failCallBack: failCallBack
+        },
+        stateCallback: stateCallBack,
+        progressCallback: progressCallBack,
+        initMultipleUploadCallback: initMultipleUploadCallBack,
+        picOperations:JSON.stringify(picOperations) //注意，json字符串类型
+      }
+    );
+```
+
+
+
 ## 相关资源
+
 - [SDK 源码下载](https://github.com/TencentCloud/cos-sdk-react-native-plugin)
 - [示例 Demo](https://github.com/TencentCloud/cos-sdk-react-native-plugin/tree/main/example)
 - [SDK 更新日志](https://github.com/TencentCloud/cos-sdk-react-native-plugin/blob/master/CHANGELOG.md)

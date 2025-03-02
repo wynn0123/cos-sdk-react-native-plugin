@@ -137,7 +137,7 @@ QCloudThreadSafeMutableDictionary *QCloudCOSTransferConfigCache() {
     dispatch_once(&onceToken, ^{
         CloudCOSTransferConfig = [QCloudThreadSafeMutableDictionary new];
     });
-    
+
     return CloudCOSTransferConfig;
 }
 
@@ -248,7 +248,7 @@ RCT_REMAP_METHOD(initCustomerDNS,
                  initCustomerDNSWithDns:(NSArray *) dnsArray
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject){
-    
+
     [dnsArray enumerateObjectsUsingBlock:^(NSDictionary * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         NSArray *ipsArray = [obj objectForKey:@"ips"];
         NSString *domain = [obj objectForKey:@"domain"];
@@ -340,9 +340,9 @@ RCT_REMAP_METHOD(updateSessionCredential,
     if(startTime){
         credentialNew.startDate = [NSDate dateWithTimeIntervalSince1970: [startTime doubleValue]]; // 单位是秒
     }
-    
+
     [signatureProvider setNewCredential: credentialNew jsonifyScopes:jsonifyScopes];
-    
+
     resolve(nil);
 }
 
@@ -404,7 +404,7 @@ RCT_REMAP_METHOD(cancelAll,
         QCloudCOSXMLService * service = [self getQCloudCOSXMLService:serviceKey];
         [[service sessionManager] cancelAllRequest];
     }
-    
+
     if([QCloudCOSTransferMangerService hasTransferMangerServiceForKey:serviceKey]){
         QCloudCOSTransferMangerService * transferManger = [self getQCloudCOSTransferMangerService:serviceKey];
         [[transferManger sessionManager] cancelAllRequest];
@@ -619,12 +619,12 @@ RCT_REMAP_METHOD(getPresignedUrl,
     if(signValidTime){
         getPresignedURLRequest.expires = [NSDate dateWithTimeIntervalSinceNow:[signValidTime intValue]];
     }
-    
+
     if(signHost){
         // 获取预签名函数，默认签入Header Host；您也可以选择不签入Header Host，但可能导致请求失败或安全漏洞
         getPresignedURLRequest.signHost = [signHost boolValue];
     }
-    
+
     if(parameters){
         // http 请求参数，传入的请求参数需与实际请求相同，能够防止用户篡改此HTTP请求的参数
         for (NSString *parametersKey in parameters) {
@@ -798,7 +798,7 @@ RCT_REMAP_METHOD(putBucket,
         configuration.bucketAZConfig = @"MAZ";
         request.createBucketConfiguration = configuration;
     }
-    
+
     [request setFinishBlock:^(id outputObject,NSError*error) {
         if(outputObject){
             resolve(nil);
@@ -873,14 +873,14 @@ RCT_REMAP_METHOD(download,
     if(trafficLimit){
         getObjectRequest.trafficLimit = [trafficLimit integerValue];
     }
-    
+
     long long saveFileSize = [self fileSizeAtPath:savePath];
     getObjectRequest.localDownloaded = [NSNumber numberWithLongLong:saveFileSize];
-    
+
     getObjectRequest.resultCallbackKey = resultCallbackKey;
     getObjectRequest.progressCallbackKey = progressCallbackKey;
     getObjectRequest.stateCallbackKey = stateCallbackKey;
-    
+
     if(taskKey == nil){
         taskKey = [NSString stringWithFormat: @"download-%@", [NSNumber numberWithUnsignedInteger:[getObjectRequest hash]]];
     }
@@ -889,13 +889,13 @@ RCT_REMAP_METHOD(download,
         if(error != nil && [error code] == QCloudNetworkErrorCodeCanceled){
             return;
         }
-        
+
         if(error == nil){
             [self stateCallback:transferKey stateCallbackKey:stateCallbackKey state:QCloudCOS_STATE_COMPLETED];
         } else {
             [self stateCallback:transferKey stateCallbackKey:stateCallbackKey state:QCloudCOS_STATE_FAILED];
         }
-        
+
         if(resultCallbackKey){
             if(error == nil){
                 NSDictionary* headerAll = [[outputObject __originHTTPURLResponse__] allHeaderFields];
@@ -917,7 +917,7 @@ RCT_REMAP_METHOD(download,
         [QCloudCOSTaskCache() removeObject:taskKey];
         [QCloudCOSTaskStateCache() removeObject:[NSString stringWithFormat: @"%@-%@", transferKey, stateCallbackKey]];
     }];
-    
+
     // 监听下载进度
     [getObjectRequest setDownProcessBlock:^(int64_t bytesDownload,
                                             int64_t totalBytesDownload,
@@ -934,10 +934,10 @@ RCT_REMAP_METHOD(download,
                                                                          }}];
         }
     }];
-    
+
     [transferManger DownloadObject:getObjectRequest];
     [self stateCallback:transferKey stateCallbackKey:stateCallbackKey state:QCloudCOS_STATE_WAITING];
-    
+
     [QCloudCOSTaskCache() setObject:getObjectRequest forKey:taskKey];
     return taskKey;
 }
@@ -1054,6 +1054,7 @@ RCT_REMAP_METHOD(cancel,
 
 RCT_REMAP_METHOD(upload,
                  uploadTransferKey:(nonnull NSString *)transferKey bucket:(nonnull NSString *)bucket cosPath:(nonnull NSString *)cosPath fileUri:(nonnull NSString *)fileUri uploadId:(nullable NSString *)uploadId resultCallbackKey:(nullable NSString *)resultCallbackKey stateCallbackKey:(nullable NSString *)stateCallbackKey progressCallbackKey:(nullable NSString *)progressCallbackKey initMultipleUploadCallbackKey:(nullable NSString *)initMultipleUploadCallbackKey stroageClass:(nullable NSString *)stroageClass trafficLimit:(nullable NSString *)trafficLimit region:(nullable NSString *)region
+        picOperations:(nullable NSString *)picOperations  // 新增参数
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -1070,16 +1071,25 @@ RCT_REMAP_METHOD(upload,
                                stroageClass:stroageClass
                                trafficLimit:trafficLimit
                                      region:region
+                              picOperations:picOperations
                                     taskKey:nil]);
 }
 
-- (nullable NSString *)uploadInternalTransferKey:(nonnull NSString *)transferKey resmeData:(nullable NSData *)resmeData bucket:(nonnull NSString *)bucket cosPath:(nonnull NSString *)cosPath fileUri:(nullable NSString *)fileUri  uploadId:(nullable NSString *)uploadId resultCallbackKey:(nullable NSString *)resultCallbackKey stateCallbackKey:(nullable NSString *)stateCallbackKey progressCallbackKey:(nullable NSString *)progressCallbackKey  initMultipleUploadCallbackKey:(nullable NSString *)initMultipleUploadCallbackKey stroageClass:(nullable NSString *)stroageClass trafficLimit:(nullable NSString *)trafficLimit region:(nullable NSString *)region taskKey:(nullable NSString *)taskKey {
+- (nullable NSString *)uploadInternalTransferKey:(nonnull NSString *)transferKey resmeData:(nullable NSData *)resmeData bucket:(nonnull NSString *)bucket cosPath:(nonnull NSString *)cosPath fileUri:(nullable NSString *)fileUri  uploadId:(nullable NSString *)uploadId resultCallbackKey:(nullable NSString *)resultCallbackKey stateCallbackKey:(nullable NSString *)stateCallbackKey progressCallbackKey:(nullable NSString *)progressCallbackKey  initMultipleUploadCallbackKey:(nullable NSString *)initMultipleUploadCallbackKey stroageClass:(nullable NSString *)stroageClass trafficLimit:(nullable NSString *)trafficLimit region:(nullable NSString *)region
+                          picOperations:(nullable NSString *)picOperations taskKey:(nullable NSString *)taskKey {
     QCloudCOSTransferMangerService * transferManger = [self getQCloudCOSTransferMangerService:transferKey];
     QCloudCOSXMLUploadObjectRequest* put = nil;
     if(resmeData == nil){
         put = [QCloudCOSXMLUploadObjectRequest new];
         put.bucket = bucket;
         put.object = cosPath;
+        //250220 集成Pic-Operations参数
+        if(picOperations && picOperations.length>0){
+            put.customHeaders = [NSMutableDictionary dictionaryWithDictionary:@{
+                    @"Pic-Operations": picOperations
+            }];
+        }
+
         if(region){
             put.regionName = region;
         }
@@ -1106,7 +1116,7 @@ RCT_REMAP_METHOD(upload,
         put.progressCallbackKey = progressCallbackKey;
         put.stateCallbackKey = stateCallbackKey;
         put.iinitMultipleUploadCallbackKey = initMultipleUploadCallbackKey;
-        
+
         NSDictionary *transferConfig = [QCloudCOSTransferConfigCache() objectForKey:transferKey];
         if(nil != transferConfig){
             id sliceSizeForUpload = [transferConfig objectForKey:@"sliceSizeForUpload"];
@@ -1130,7 +1140,7 @@ RCT_REMAP_METHOD(upload,
         put.stateCallbackKey = stateCallbackKey;
         put.iinitMultipleUploadCallbackKey = initMultipleUploadCallbackKey;
     }
-    
+
     // 监听上传进度
     [put setSendProcessBlock:^(int64_t bytesSent,
                                int64_t totalBytesSent,
@@ -1155,13 +1165,13 @@ RCT_REMAP_METHOD(upload,
         if(error != nil && [error code] == QCloudNetworkErrorCodeCanceled){
             return;
         }
-        
+
         if(error == nil){
             [self stateCallback:transferKey stateCallbackKey:stateCallbackKey state:QCloudCOS_STATE_COMPLETED];
         } else {
             [self stateCallback:transferKey stateCallbackKey:stateCallbackKey state:QCloudCOS_STATE_FAILED];
         }
-        
+
         if(resultCallbackKey){
             if(error == nil){
                 NSDictionary* headerAll = [[result __originHTTPURLResponse__] allHeaderFields];
@@ -1204,7 +1214,7 @@ RCT_REMAP_METHOD(upload,
     }];
     [transferManger UploadObject:put];
     [self stateCallback:transferKey stateCallbackKey:stateCallbackKey state:QCloudCOS_STATE_WAITING];
-    
+
     [QCloudCOSTaskCache() setObject:put forKey:taskKey];
     return taskKey;
 }
@@ -1214,7 +1224,7 @@ RCT_REMAP_METHOD(upload,
         @"transferKey": transferKey,
         @"callbackKey":resultCallbackKey,
     }.mutableCopy;
-    
+
     if([self buildClientException:error]){
         [mInfo setObject:[self buildClientException:error] forKey:@"clientException"];
     }
@@ -1300,7 +1310,7 @@ RCT_REMAP_METHOD(upload,
     if([error.domain isEqualToString:kQCloudNetworkDomain] && error.code == QCloudNetworkErrorCodeResponseDataTypeInvalid){
         error_name = @"Server";
     }
-    
+
     return error_name;
 }
 
