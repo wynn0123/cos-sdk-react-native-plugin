@@ -1,7 +1,8 @@
 ## 注意：此包为Fork仓库，意在自己扩展一些功能
 
 1. 原官方仓库地址：https://github.com/TencentCloud/cos-sdk-react-native-plugin
-2. 在原sdk基础上增加一个picOperations参数，用来支持腾讯云图片处理参数
+2. **在原sdk基础上增加一个picOperations参数，用来支持腾讯云图片处理参数**
+3. 本地打包命令：npm pack，注意先删除lib目录然后执行，随后在根目录生成 react-native-cos-sdk-xxx.tgz 文件。安装方法：npm install react-native-cos-sdk-xxx.tgz
 
 #### picOperations 使用方法：
 

@@ -616,10 +616,6 @@ RCT_REMAP_METHOD(getPresignedUrl,
     getPresignedURLRequest.object = cosPath;
     getPresignedURLRequest.HTTPMethod = @"GET";
 
-    if(signValidTime){
-        getPresignedURLRequest.expires = [NSDate dateWithTimeIntervalSinceNow:[signValidTime intValue]];
-    }
-
     if(signHost){
         // 获取预签名函数，默认签入Header Host；您也可以选择不签入Header Host，但可能导致请求失败或安全漏洞
         getPresignedURLRequest.signHost = [signHost boolValue];
@@ -983,6 +979,11 @@ RCT_REMAP_METHOD(resume,
             resolve(nil);
             return;
         }
+        if([put resmeData] == nil) {
+            NSLog(@"%@ request has not started", taskId);
+            resolve(nil);
+            return;
+        }
         [self uploadInternalTransferKey:transferKey
                               resmeData:[put resmeData]
                          bucket:[put bucket]
@@ -996,6 +997,7 @@ RCT_REMAP_METHOD(resume,
                            stroageClass:QCloudCOSStorageClassTransferToString([put storageClass])
                            trafficLimit:[NSString stringWithFormat: @"%ld", [put trafficLimit]]
                                  region:[put regionName]
+                                 picOperations:nil
                         taskKey:taskId];
         [self stateCallback:transferKey stateCallbackKey:[put stateCallbackKey] state:QCloudCOS_STATE_RESUMED_WAITING];
         resolve(nil);
